@@ -1,15 +1,22 @@
+/**
+ * 用户列表组件
+ */
 import React from 'react';
 import { connect } from 'dva';
-import { Table, Pagination, Popconfirm } from 'antd';
+import { Table, Pagination, Popconfirm, Button } from 'antd';
 import { routerRedux } from 'dva/router';
 import styles from './User.less';
+import UserModal from './UserModal';
 import { PAGE_SIZE } from '../constants';
 
 @connect(({ users, loading }) => ({
   dataSource: users.list,
   total: users.total,
   current: users.page,
-  loadingUsers: loading.effects['users/fetchUsers'] || loading.effects['users/removeUsers'],
+  loadingUsers: loading.effects['users/fetchUsers'] ||
+                loading.effects['users/removeUsers'] ||
+                loading.effects['users/editUsers'] ||
+                loading.effects['users/createUsers'],
 }))
 class Users extends React.Component {
   /**
@@ -34,6 +41,31 @@ class Users extends React.Component {
     }));
   }
 
+  /**
+   * 编辑列表
+   */
+  handleEditList = (id, values) => {
+    const { dispatch } = this.props;
+    dispatch({
+      type: 'users/editUsers',
+      payload: {
+        id,
+        values,
+      },
+    });
+  }
+
+  /**
+   * 新建列表
+   */
+  createHandler = (values) => {
+    const { dispatch } = this.props;
+    dispatch({
+      type: 'users/createUsers',
+      payload: values,
+    }).then(() => console.log(this.props.dataSource));
+  }
+
   render () {
     const { dataSource, total, current, loadingUsers } = this.props;
     const columns = [
@@ -56,10 +88,12 @@ class Users extends React.Component {
       {
         title: 'Operation',
         key: 'operation',
-        render: (text, { id }) => (
+        render: (text, record) => (
           <span className={styles.operation}>
-            <a href="">Edit</a>
-            <Popconfirm title="Confirm to delete?" onConfirm={() => this.deleteHandler(id)}>
+            <UserModal record={record} onOk={this.handleEditList}>
+              <a>Edit</a>
+            </UserModal>
+            <Popconfirm title="Confirm to delete?" onConfirm={() => this.deleteHandler(record.id)}>
               <a href="">Delete</a>
             </Popconfirm>
           </span>
@@ -68,6 +102,11 @@ class Users extends React.Component {
     ];
     return (
       <div>
+        <div className={styles.create}>
+          <UserModal record={{}} onOk={this.createHandler}>
+            <Button type="primary">Create User</Button>
+          </UserModal>
+        </div>
         <div>
           <Table
             loading={loadingUsers}

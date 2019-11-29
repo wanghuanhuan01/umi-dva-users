@@ -19,4 +19,23 @@ export async function removeUsers(id) {
   });
 }
 
+/**
+ * 编辑用户列表
+ */
+export async function editUsers(payload) {
+  const { id, values } = payload;
+  return request(`/api/users/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(values),
+  });
+}
 
+/**
+ * 新建用户
+ */
+export async function createUsers(values) {
+  return request('/api/users', {
+    method: 'POST',
+    body: JSON.stringify(values),
+  });
+}

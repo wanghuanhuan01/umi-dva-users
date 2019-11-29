@@ -1,4 +1,4 @@
-import { fetchUsers, removeUsers } from '../services/users';
+import { fetchUsers, removeUsers, editUsers, createUsers } from '../services/users';
 
 export default {
   nameSpace: 'users',
@@ -31,6 +31,25 @@ export default {
             list: list.filter(({ id }) => id !== payload),
           },
         });
+      }
+    },
+    *editUsers({ payload }, { call, put, select }) {
+      const res = yield call(editUsers, payload);
+      const list  = yield select(state => state.users.list);
+      if (res && !res.failed) {
+        yield put({
+          type: 'updateState',
+          payload: {
+            list: list.map(item => item.id === payload.id ? Object.assign({}, item, payload.values) : item),
+          },
+        });
+      }
+    },
+    *createUsers({ payload }, { call, put, select }) {
+      const res = yield call(createUsers, payload);
+      const list  = yield select(state => state.users.list);
+      if (res && !res.failed) {
+        list.unshift({ ...payload, id: list[list.length - 1].id + 1 });
       }
     },
   },
